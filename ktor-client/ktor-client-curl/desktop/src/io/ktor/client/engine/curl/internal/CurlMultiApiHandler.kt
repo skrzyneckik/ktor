@@ -45,7 +45,7 @@ internal class CurlMultiApiHandler : Closeable {
         curl_multi_cleanup(multiHandle).verify()
     }
 
-    public fun scheduleRequest(request: CurlRequestData, deferred: CompletableDeferred<CurlSuccess>): EasyHandle {
+    fun scheduleRequest(request: CurlRequestData, deferred: CompletableDeferred<CurlSuccess>): EasyHandle {
         val easyHandle = curl_easy_init()
             ?: throw @Suppress("DEPRECATION") CurlIllegalStateException("Could not initialize an easy handle")
 
@@ -121,7 +121,7 @@ internal class CurlMultiApiHandler : Closeable {
         curl_multi_remove_handle(multiHandle, easyHandle).verify()
     }
 
-    public fun perform(millis: Int = 100) {
+    fun perform(millis: Int = 100) {
         memScoped {
             val transfersRunning = alloc<IntVar>()
             do {
