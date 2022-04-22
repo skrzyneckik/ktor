@@ -8,18 +8,19 @@ import io.ktor.util.collections.*
 import platform.posix.*
 import kotlin.native.concurrent.*
 
-internal expect val SIGNAL_NUMBER: Int
-
-@OptIn(ExperimentalStdlibApi::class, InternalAPI::class)
+@Suppress("DEPRECATION")
+@OptIn(ExperimentalStdlibApi::class)
 @EagerInitialization
-private val init = ThreadInfo
+private val init = setSignalHandler().also {
+    println("ThreadInfo initialized")
+}
 
 @InternalAPI
 public object ThreadInfo {
     private val threads = ConcurrentMap<Worker, pthread_t>()
 
     init {
-        setSignalHandler()
+        init
     }
 
     public fun registerCurrentThread() {
@@ -35,9 +36,19 @@ public object ThreadInfo {
         if (Platform.osFamily == OsFamily.WINDOWS) return emptyList()
 
         val result = mutableListOf<WorkerStacktrace>()
+        val removed = mutableSetOf<Worker>()
         for ((worker, thread) in threads.entries) {
-            kill(thread, SIGNAL_NUMBER)
-            result += WorkerStacktrace(worker, getDumpedStack())
+            try {
+                val name = worker.name
+                val stack = collectStack(thread)
+                result += WorkerStacktrace(name, stack)
+            } catch (_: Throwable) {
+                removed.add(worker)
+            }
+        }
+
+        removed.forEach {
+            threads.remove(it)
         }
 
         return result
@@ -65,12 +76,10 @@ public object ThreadInfo {
 
 @InternalAPI
 public class WorkerStacktrace(
-    public val worker: Worker,
+    public val worker: String,
     public val stacktrace: List<String>
 )
 
-internal expect fun kill(thread: pthread_t, signal: Int): Int
+internal expect fun collectStack(thread: pthread_t): List<String>
 
 internal expect fun setSignalHandler()
-
-internal expect fun getDumpedStack(): List<String>

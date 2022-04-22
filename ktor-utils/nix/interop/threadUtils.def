@@ -2,7 +2,9 @@
 #include <execinfo.h>
 #include <signal.h>
 #include <stdatomic.h>
-
+#include <printf.h>
+#include <unistd.h>
+ 
 void* callstack[256];
 int stack_size;
 
@@ -10,25 +12,26 @@ int stack_size;
 #define DONE 0
 _Atomic int state;
 
-
-void start_operation() {
-    atomic_store(&state, STARTED);
-}
-
-void finish_operation() {
+void dump_backtrace(int signum) {
+    stack_size = backtrace(callstack, 256);
     atomic_store(&state, DONE);
 }
 
-int is_done() {
-    return atomic_load(&state);
-}
+int collect_stack(pthread_t thread) {
+    atomic_store(&state, STARTED);
+    signal(SIGUSR2, dump_backtrace);
 
-void dump_backtrace(int signum) {
-    stack_size = backtrace(callstack, 256);
-    finish_operation();
+    int result = pthread_kill(thread, SIGUSR2);
+    if (result != 0) {
+        printf("Fail to signal: %d\n", result);
+        atomic_store(&state, DONE);
+        return -1;
+    }
+
+    while (atomic_load(&state) != DONE) {}
+
+    return stack_size;
 }
 
 void set_signal_handler() {
-    atomic_init(&state, DONE);
-    signal(SIGUSR2, dump_backtrace);
 }

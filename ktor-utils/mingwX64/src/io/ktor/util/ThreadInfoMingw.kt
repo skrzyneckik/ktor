@@ -6,12 +6,6 @@ package io.ktor.util
 
 import platform.posix.*
 
-internal actual val SIGNAL_NUMBER: Int = -1
-
-internal actual fun kill(thread: pthread_t, signal: Int): Int {
-    return -1
-}
+internal actual fun collectStack(thread: pthread_t): List<String> = emptyList()
 
 internal actual fun setSignalHandler() = Unit
-
-internal actual fun getDumpedStack(): List<String> = emptyList()
