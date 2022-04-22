@@ -55,7 +55,7 @@ internal class CurlProcessor(coroutineContext: CoroutineContext) {
         curlDispatcher.close()
     }
 
-    private fun curlPerform() = curlScope.launch { curlApi.perform(100) }
+    private fun curlPerform() = curlScope.launch { curlApi.perform(1) }
 
     private fun cancelRequest(easyHandle: EasyHandle, cause: Throwable) {
         curlScope.launch {

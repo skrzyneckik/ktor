@@ -121,7 +121,7 @@ internal class CurlMultiApiHandler : Closeable {
         curl_multi_remove_handle(multiHandle, easyHandle).verify()
     }
 
-    fun perform(millis: Int = 100) {
+    fun perform(millis: Int) {
         memScoped {
             val transfersRunning = alloc<IntVar>()
             do {
