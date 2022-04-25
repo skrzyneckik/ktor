@@ -103,5 +103,8 @@ public fun ByteReadPacket.decodeBase64Bytes(): Input = buildPacket {
     }
 }
 
+@Suppress("NOTHING_TO_INLINE")
 internal inline fun Int.toBase64(): Char = BASE64_ALPHABET[this]
+
+@Suppress("NOTHING_TO_INLINE")
 internal inline fun Byte.fromBase64(): Byte = BASE64_INVERSE_ALPHABET[toInt() and 0xff].toByte() and BASE64_MASK
